@@ -1,146 +1,166 @@
 from tkinter import *
-from path_tool import path_finder, node_paths_to_demand_paths
-from generate_lpsolve import *
+from path_tool import *
 from objective_functions import *
-link_cost_entries = []
-link_capacity_entries = []
-demand_entries = []
-min_flow_volume = 0
-min_num_paths_p_demand = 0
-row = 1
-obj_func_type = ""
+from generate_lpsolve import solve_gen_dimen_alloc_prob
+demand_rows = 4
+# links = [(1,2),(2,3),(1,3)]
 
-## Globals are a mess, fix later
-## Passing around too many different arrays. USE dictionaries!
+def print_demand(links):
 
-def create_demand():
-    global win, demand_entries
-    win.title("")
-    global row
-    row+=1
-    for i in range(3):
-        demand_entries.append(Entry(win, width=8))
-        demand_entries[-1].grid(row=row, column=i*4, columnspan=4)
-
-def remove_demand():
-    global win, demand_entries
-    try:
-        for i in range(3):
-            demand_entries[-1].destroy()
-            demand_entries.pop()
-
-    except:
-        win.title("No demands to remove..")
-
-   
-def print_demand(links, win):
-    global link_cost_entries, link_capacity_entries, demand_entries, obj_func_type
-    global min_num_paths_p_demand, min_flow_volume
-    path_flow_vars = []
-    path_flow_DV = []
-    link_capacities = []
-    link_costs = []
-    print(min_flow_volume.get())
-    print(min_num_paths_p_demand.get())
-    idx = 0
+    demand_entries = vars["demand_entries"]
     for i in range(0, len(demand_entries), 3):
-        idx+=1
         node_a = int(demand_entries[i].get())
         node_b = int(demand_entries[i+1].get())
         node_paths = path_finder(links, node_a, node_b)
         demand_paths = node_paths_to_demand_paths(links, node_paths)
-        
-        path_flow_vars.append(demand_paths)
-        path_flow_DV.append(float(demand_entries[i+2].get()))
-    for i in range(len(link_capacity_entries)):
+        vars["path_flow_vars"].append(demand_paths)
+        vars["path_flow_DV"].append(float(demand_entries[i+2].get()))
+    print(vars["path_flow_vars"])
+    print(vars["path_flow_DV"])
+    for i in range(len(vars["capacity_entries"])):
         try:
-            link_capacities.append(float(link_capacity_entries[i].get()))
+            vars["capacity_entries"][i] = float(vars["capacity_entries"][i].get())
         except:
-            link_capacities.append(0)
-    for i in range(len(link_capacity_entries)):
-        try:
-            link_costs.append(float(link_cost_entries[i].get()))
+            vars["capacity_entries"][i] = 0
+        try: 
+            vars["cost_entries"][i] = float(vars["cost_entries"][i].get())
         except:
-            link_costs.append(0)
+            vars["cost_entries"][i] = 0
+            
+    print(vars["capacity_entries"])
+    print(vars["cost_entries"])
+    print(vars)
+    # match vars["obj_func"]:
+    #     case "min_hops":
+    #         vars["obj_func"] = min_hops(vars)
+    #     case "min_routing_cost":
+    #         vars["obj_func"] = min_routing_cost(vars)
+    #     case "none":
+    #         vars["obj_func"] = "min: ;"
+    solve_gen_dimen_alloc_prob(vars)
 
-    obj_func = min_hops(path_flow_vars)
-    # print("here->", obj_func)
-
-    match obj_func_type:
-        case "min_hops":
-            obj_func = min_hops(path_flow_vars)
-        case "min_routing_cost":
-            obj_func = min_routing_cost(path_flow_vars, link_costs)
-
-    solve_gen_dimen_alloc_prob(path_flow_vars, path_flow_DV, link_capacities, obj_func)
     # win.destroy()
-    # link_cost_entries = []
-    # link_capacity_entries = []
-    # demand_entries = []
 
-def set_obj_func(var):
-    global obj_func_type
-    # var = var.get()
-    match int(var.get()):
+    
+def create_demand(demand_frame):
+    global demand_rows #, demand_frame,win
+    for i in range(3):
+        vars["demand_entries"].append(Entry(demand_frame, width=10))
+        vars["demand_entries"][-1].grid(row=demand_rows, column=i)
+    demand_rows+=1
+    
+def remove_demand():
+    global demand_rows
+    try:
+        for i in range(3):
+            vars["demand_entries"][-1].destroy()
+            vars["demand_entries"].pop()
+    except:
+        Exception
+    demand_rows-=1
+    
+def debug():
+    print("test")
+    for i in vars["demand_entries"]:
+        print(i.get())
+    for i in vars["cost_entries"]:
+        print(i.get())
+    for i in vars["capacity_entries"]:
+        print(i.get())  
+    print(vars["obj_func"])  
+    print(vars["max_path_length"].get())
+    print(vars["min_#_paths/demand"].get())
+    print(vars["min_flow_vol"].get())
+    
+def set_obj_func(rb_var):
+    match int(rb_var.get()):
         case 1:
-            obj_func_type = "min_hops"
+            vars["obj_func"] = "min_hops"
         case 2:
-            obj_func_type = "min_routing_cost"
+            vars["obj_func"] = "min_routing_cost"
+        case 3:
+            vars["obj_func"] = "none"
+    
+vars= {}
+vars["cost_entries"] = []
+vars["capacity_entries"] = []
+vars["demand_entries"] = []
+vars["obj_func"] = 3
+vars["path_flow_vars"] = []
+vars["path_flow_DV"] = []
+
+
 
 def assign_params(links):
-    global row, win, demand_entries, obj_func_type, min_flow_volume, min_num_paths_p_demand
-    demand_entries = []
-
     win = Tk()
-    var = IntVar()
+    rb_var = IntVar()
+    # win.maxsize(300, 900)
+    win.resizable(False,False)
+    l_frame = Frame(win, width=150)
+    l_frame.grid(row=0, column=0, sticky="nsew")
+    r_frame = Frame(win, width=150)
+    r_frame.grid(row=0, column=1, sticky="nsew")
+    demand_frame = Frame(win, width=300)
+    demand_frame.grid(row=1, column=0,  columnspan=2, sticky="nsew")
 
-    win.geometry("300x670")
-    win.title("")
-    
-    # LINK COSTS AND CAPACITIES
-    Label(win, text="Link costs", font=('Helvetica', 12, 'bold')).grid(row=row, column=0, columnspan=6)
-    Label(win, text="Link Capacities", font=('Helvetica', 12, 'bold')).grid(row=row, column=6, columnspan=6)
-    for i in range(len(links)):
-        row +=1
-        link_cost_entries.append(Entry(win, width= 8))
-        Label(win, text="e%d" % (i+1)).grid(row=row, column=0, columnspan=1)
-        link_cost_entries[i].grid(row=row, column=1, columnspan=5)
- 
-        link_capacity_entries.append(Entry(win, width= 8, ))
-        Label(win, text="c%d" % (i+1)).grid(row=row, column=6, columnspan=1)
-        link_capacity_entries[i].grid(row=row, column=7, columnspan=4)
-    row+=1
-    # EXTRA PATH CONSTRAINTS
-    Label(win, text="Min flow volume").grid(row=row, column=0)
-    min_flow_volume = Entry(win, width=8)
-    min_flow_volume.grid(row=row, column = 3)
-    row+=1
-    Label(win, text="Min # paths per demand").grid(row=row, column=0)
-    min_num_paths_p_demand = Entry(win, width=8)
-    min_num_paths_p_demand.grid(row=row, column = 3)
-    row+=1
-    # DEMANDS
-    Label(win, text="Demands", font=('Helvetica', 12, 'bold')).grid(row=row, column=0, columnspan=12)
-    row+=1
-    Label(win, text="Node A").grid(row=row, column=0, columnspan=4)
-    Label(win, text="Node B").grid(row=row, column=4, columnspan=4)
-    Label(win, text="DVUs").grid(row=row, column=8, columnspan=4)
-    create_demand()
-    # RADIO BUTTONS
-    row+=1
-    n_row=100
-    r = Radiobutton(win, text="Min Hops", variable=var, value=1, command=lambda: set_obj_func(var))
-    r.grid(row=n_row, column=2, columnspan=4)
-    n_row+=1
-    r = Radiobutton(win, text="Min Routing Cost", variable=var, value=2, command=lambda: set_obj_func(var))
-    r.grid(row=n_row, column=2, columnspan=4)
-    ## BUTTONS
-    n_row+=1
-    Button(win, text="Create demand",font=('Helvetica', 12, 'bold'), command=create_demand).grid(row=n_row, column=0, columnspan=3)
-    Button(win, text="Remove demand",font=('Helvetica', 12, 'bold'), command=remove_demand).grid(row=n_row, column=6, columnspan=3)
-    n_row+=1
-    Button(win, text="LP_SOLVE", font=('Helvetica', 12, 'bold'), command=lambda: print_demand(links, win)).grid(row=n_row, column=0, columnspan=12)
-    n_row+=1
+    win.columnconfigure(0, weight=1) 
+    win.columnconfigure(1, weight=1) 
+    win.rowconfigure(0, weight=1) 
+    win.rowconfigure(1, weight=1) 
+
+    ## LINK COSTS AND CAPACITIES
+    Label(l_frame, text="Link Costs", font=('Helvetica', 12, 'bold')).grid(row=0, column=0, columnspan=2)
+    Label(r_frame, text="Link Capacities", font=('Helvetica', 12, 'bold')).grid(row=0, column=1, columnspan=2)
+
+    for i in range(1, len(links)+1):
+        Label(l_frame, text="e%d" % (i) ).grid(row=i, column=0)
+        vars["cost_entries"].append(Entry(l_frame, width=10))
+        vars["cost_entries"][i-1].grid(row=i, column=1)
+        Label(r_frame, text="c%d" % (i)).grid(row=i, column=0)
+        vars["capacity_entries"].append(Entry(r_frame, width=10))
+        vars["capacity_entries"][i-1].grid(row=i, column=1)
+        
+    ## DEMANDS
+    demand_frame.columnconfigure(0, weight=1)
+    demand_frame.columnconfigure(1, weight=1)
+    demand_frame.columnconfigure(2, weight=1)
+
+    Label(demand_frame, text="Demands", font=('Helvetica', 12, 'bold')).grid(row=0, column=0, columnspan=3)
+    Label(demand_frame, text="Node A").grid(row=1, column=0)
+    Label(demand_frame, text="Node B").grid(row=1, column=1)
+    Label(demand_frame, text="DVUs").grid(row=1, column=2)
+    create_demand(demand_frame)  
+
+    ## OBJECTIVE FUNCTION
+    obj_frame = Frame(win, width=300)
+    obj_frame.grid(row=2, column=0, columnspan=2)
+    Label(obj_frame, text="Objective function", font=('Helvetica', 12, 'bold')).grid(row=0, column=0, columnspan=3)
+    Radiobutton(obj_frame, text="Min hops", variable=rb_var, command=lambda:set_obj_func(rb_var), value=1).grid(row=1, column=0)
+    Radiobutton(obj_frame, text="Min routing cost", variable=rb_var, command=lambda:set_obj_func(rb_var), value=2).grid(row=1, column=1)
+    Radiobutton(obj_frame, text="None", variable=rb_var, command=lambda:set_obj_func(rb_var), value=3).grid(row=1, column=2)
+
+    ## PATH/FLOW CONSTRAINTS
+    rules_frame = Frame(win, width=300)
+    rules_frame.grid(row=3, column=0, columnspan=3)
+    rules_frame.columnconfigure(0, weight=1)
+    rules_frame.columnconfigure(1, weight=2)
+    Label(rules_frame, text="Path/Flow constraints", font=('Helvetica', 12, 'bold')).grid(row=0, column=0, columnspan=3)
+    Label(rules_frame, text="Max. path length").grid(row=1, column=0)
+    vars["max_path_length"] = Entry(rules_frame, width=10)
+    vars["max_path_length"].grid(row=1, column=1, columnspan=2)
+    Label(rules_frame, text="Min. flow volume").grid(row=2, column=0)
+    vars["min_flow_vol"] = Entry(rules_frame, width=10)
+    vars["min_flow_vol"].grid(row=2, column=1, columnspan=2)
+    Label(rules_frame, text="Min. # paths/demand").grid(row=3, column=0)
+    vars["min_#_paths/demand"] = Entry(rules_frame, width=10)
+    vars["min_#_paths/demand"].grid(row=3, column=1, columnspan=2)
+
+    buttons_frame = Frame(win, width=300)
+    buttons_frame.grid(row=4, column=0, columnspan=3)
+    Button(buttons_frame, text="Create demand", command=lambda: create_demand(demand_frame)).grid(row=0, column=0)
+    Button(buttons_frame, text="Remove demand", command=remove_demand).grid(row=0, column=1)
+    Button(buttons_frame, text="DEBUG", command=lambda: print_demand(links)).grid(row=1, column=0, columnspan=3)
     win.mainloop()
 
-# assign_params([(1,2),(2,3),(1,3)])
+
+# assign_params(links)

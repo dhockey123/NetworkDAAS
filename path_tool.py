@@ -39,12 +39,12 @@ def limit_path_hops(length, paths):
         print(len(path), path)
         if length<(len(path)-1):
             idx.append(i)
-            print(i)
+            # print(i)
     for i in sorted(idx, reverse=True):
         del paths[i]
     return paths        
 
-links = [(1, 2), (2, 3), (3, 1), (2, 4), (4, 3)]
+# links = [(1, 2), (2, 3), (3, 1), (2, 4), (4, 3)]
 
-print(path_finder(links, 2, 1))
-print(node_paths_to_demand_paths(links, path_finder(links,1 , 2)))
+# print(path_finder(links, 2, 1))
+# print(node_paths_to_demand_paths(links, path_finder(links,1 , 2)))

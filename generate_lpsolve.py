@@ -1,5 +1,36 @@
 import os
 
+def min_hops(vars):
+    obj_func = "min: "
+    for i, demand in enumerate(vars["path_flow_vars"]):
+        for j, flow in enumerate(demand):
+            obj_func += "%dX%d%d+" % (len(flow), i+1, j+i)
+    obj_func = obj_func[:-1]+";\n"
+    return obj_func
+
+def min_routing_cost(vars):
+    obj_func = "min: "
+    for i, demand in enumerate(vars["path_flow_vars"]):
+        for j, flow in enumerate(demand):
+            flow_cost = 0
+            ## optimize later - dot product sliced arrays
+            for link in flow:
+                flow_cost += vars["cost_entries"][link-1]
+            obj_func += "%dX%d%d+" % (flow_cost, i+1, j+1)
+
+    obj_func = obj_func[:-1] + ";\n"
+    return obj_func
+
+def get_obj_function(vars):
+    match vars["obj_func"]:
+        case "min_hops":
+            vars["obj_func"] = min_hops(vars)
+        case "min_routing_cost":
+            vars["obj_func"] = min_routing_cost(vars)
+        case "none":
+            vars["obj_func"] = "min: ;"
+    return vars["obj_func"]
+
 def get_demand_constraints(path_flow_vars, path_flow_DV):
     all_demand_constraints = ""
     for i, demand in enumerate(path_flow_vars):
@@ -47,19 +78,35 @@ def get_lower_bound_flows(path_flow_vars, min_flow_vol):
             all_lower_bound_flows += "%dU%d%d<=X%d%d;\n" % (min_flow_vol,  i+1, j+1, i+1, j+1)
     return all_lower_bound_flows
 
-def solve_gen_dimen_alloc_prob(path_flow_vars, path_flow_DV, link_capacities, obj_func):
+# def solve_gen_dimen_alloc_prob(path_flow_vars, path_flow_DV, link_capacities, obj_func):
+#     f = open("lp_solve.txt", "w+")
+#     ## OBJECTIVE FUNCTION
+#     f.write("// OBJECTIVE FUNCTION\n")
+#     f.write(obj_func)
+
+#     ## DEMAND CONSTRAINTS
+#     f.write("\n// DEMAND CONSTRAINTS\n")
+#     f.write(get_demand_constraints(path_flow_vars, path_flow_DV))
+
+#     ## CAPACITY CONSTRAINTS
+#     f.write("\n// CAPACITY CONSTRAINTS\n")
+#     f.write(get_capacity_constraints(path_flow_vars, link_capacities))
+
+#     f.close()
+#     os.system("lp_solve "+os.getcwd()+"/lp_solve.txt")
+def solve_gen_dimen_alloc_prob(vars):
     f = open("lp_solve.txt", "w+")
     ## OBJECTIVE FUNCTION
     f.write("// OBJECTIVE FUNCTION\n")
-    f.write(obj_func)
+    f.write(get_obj_function(vars))
 
     ## DEMAND CONSTRAINTS
     f.write("\n// DEMAND CONSTRAINTS\n")
-    f.write(get_demand_constraints(path_flow_vars, path_flow_DV))
+    f.write(get_demand_constraints(vars["path_flow_vars"], vars["path_flow_DV"]))
 
     ## CAPACITY CONSTRAINTS
     f.write("\n// CAPACITY CONSTRAINTS\n")
-    f.write(get_capacity_constraints(path_flow_vars, link_capacities))
+    f.write(get_capacity_constraints(vars["path_flow_vars"], vars["capacity_entries"]))
 
     f.close()
     os.system("lp_solve "+os.getcwd()+"/lp_solve.txt")
