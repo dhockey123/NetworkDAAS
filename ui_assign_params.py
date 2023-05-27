@@ -1,6 +1,5 @@
 from tkinter import *
 from path_tool import *
-from objective_functions import *
 from generate_lpsolve import solve_gen_dimen_alloc_prob
 demand_rows = 4
 # links = [(1,2),(2,3),(1,3)]
