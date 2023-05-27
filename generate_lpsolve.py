@@ -158,13 +158,3 @@ def solve_min_flow_vol(path_flow_vars, path_flow_DV, link_capacities, min_flow_v
     f.close()
     os.system("lp_solve "+os.getcwd()+"/lp_solve.txt")
 
-
-
-
-a = [[[1], [3, 2]], [[2], [1, 3]]]
-b = [5.0, 3.0]
-c = [3.0, 0, 7.0]
-d = "min: 2X11+10X12+4X21+8X22;\n"
-
-# solve_enforced_path_diversity(a, b, c, d, 2)
-solve_min_flow_vol(a, b, c, 3, d)
