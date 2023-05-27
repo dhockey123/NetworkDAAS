@@ -8,7 +8,6 @@ SCREEN_HEIGHT = 480
 DASH_WIDTH = 120
 DASH_HEIGHT = SCREEN_HEIGHT
 
-
 #Define geometry of the window
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption("Network design - Press 'space' key - R.Click between nodes")
@@ -160,18 +159,11 @@ while True:
 
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_SPACE:
-                # paramfile(links)
-                assign_params(links)
-                
-                # lp_solve_it()
-      
                 print("\nNodes: ", nodes)
                 print("Links: ", links)
-                # node_paths =  path_finder(links, node_a, node_b)
-                # print("Node paths: ", node_paths)
-                # demand_paths = node_paths_to_demand_paths(links, node_paths)
-                # # demand_paths = limit_path_hops(2, demand_paths)
-                # print("Demand paths: ", demand_paths)
+                assign_params(links)
+                
+      
                 
     # Clear the screen
     screen.fill((255, 255, 255))

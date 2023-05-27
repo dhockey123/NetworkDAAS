@@ -25,17 +25,12 @@ def print_demand(links):
             vars["cost_entries"][i] = float(vars["cost_entries"][i].get())
         except:
             vars["cost_entries"][i] = 0
-            
-    print(vars["capacity_entries"])
-    print(vars["cost_entries"])
-    print(vars)
-    # match vars["obj_func"]:
-    #     case "min_hops":
-    #         vars["obj_func"] = min_hops(vars)
-    #     case "min_routing_cost":
-    #         vars["obj_func"] = min_routing_cost(vars)
-    #     case "none":
-    #         vars["obj_func"] = "min: ;"
+    print("B:", vars["path_flow_vars"])
+    
+    if vars["max_path_length"].get():
+        vars["max_path_length"] = float(vars["max_path_length"].get())
+        vars["path_flow_vars"] = limit_path_hops(vars["max_path_length"],vars["path_flow_vars"])
+    print("A:", vars["path_flow_vars"])
     solve_gen_dimen_alloc_prob(vars)
 
     # win.destroy()

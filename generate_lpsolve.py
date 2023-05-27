@@ -50,10 +50,11 @@ def get_capacity_constraints(path_flow_vars, link_capacities):
             for j, flow in enumerate(demand_path):
                 if x in flow:
                     link_inequality += "X%d%d+" % (i+1,j+1)
-        if link_capacities[x-1] != 0:
-            link_inequality = link_inequality[:-1] + "<=" + str(link_capacities[x-1]) + ";\n"
-        else:
-            link_inequality = link_inequality[:-1] + "<=y" + str(x) + ";\n"
+        if link_inequality != "":
+            if link_capacities[x-1] != 0:
+                link_inequality = link_inequality[:-1] + "<=" + str(link_capacities[x-1]) + ";\n"
+            else:
+                link_inequality = link_inequality[:-1] + "<=y" + str(x) + ";\n"
         all_capacity_constraints+=link_inequality
     return all_capacity_constraints
 
@@ -111,11 +112,11 @@ def solve_gen_dimen_alloc_prob(vars):
     f.close()
     os.system("lp_solve "+os.getcwd()+"/lp_solve.txt")
 
-def solve_enforced_path_diversity(path_flow_vars, path_flow_DV, link_capacities, obj_func, min_paths):
+def solve_enforced_path_diversity(vars):
     f = open("lp_solve.txt", "w+")
     ## OBJECTIVE FUNCTION
     f.write("// OBJECTIVE FUNCTION\n")
-    f.write(obj_func)
+    f.write(get_obj_function(vars))
 
     ## DEMAND CONSTRAINTS
     f.write("\n// DEMAND CONSTRAINTS\n")

@@ -20,7 +20,6 @@ def path_finder(links, a, b, path=None, result=None):
     return result
 
 def node_paths_to_demand_paths(links, paths):
-
     demand_paths = []
     
     for path in paths:
@@ -34,17 +33,21 @@ def node_paths_to_demand_paths(links, paths):
     return sorted(demand_paths, key=len)
 
 def limit_path_hops(length, paths):
-    idx = []
-    for i,path in enumerate(paths):
-        print(len(path), path)
-        if length<(len(path)-1):
-            idx.append(i)
-            # print(i)
-    for i in sorted(idx, reverse=True):
-        del paths[i]
-    return paths        
+    new_paths = []
+    for demand in paths:
+        new_path = []
+        for path in demand:
+            if len(path) <= length:
+                print(path, len(path))
+                new_path.append(path)
+        new_paths.append(new_path)
+        
+    return(new_paths)
+
 
 # links = [(1, 2), (2, 3), (3, 1), (2, 4), (4, 3)]
 
 # print(path_finder(links, 2, 1))
 # print(node_paths_to_demand_paths(links, path_finder(links,1 , 2)))
+# paths = [[[1], [3, 2]],[[2],[1,3]]]
+# print(limit_path_hops(1, paths))
