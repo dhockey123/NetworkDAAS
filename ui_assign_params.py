@@ -1,7 +1,7 @@
 
 from tkinter import *
 from path_tool import *
-from generate_lpsolve import solve_gen_dimen_alloc_prob
+from generate_lpsolve import solve
 demand_rows = 4
 # # links = [(1,2),(2,3),(1,3)]
 # nodes =  [1, 2, 3, 4]
@@ -31,7 +31,20 @@ def print_demand(links):
     if vars["max_path_length"].get():
         vars["max_path_length"] = float(vars["max_path_length"].get())
         vars["path_flow_vars"] = limit_path_hops(vars["max_path_length"],vars["path_flow_vars"])
-    solve_gen_dimen_alloc_prob(vars)
+    else:
+        vars["max_path_length"] = 0
+    if vars["min_flow_vol"].get():
+        vars["min_flow_vol"] = float(vars["min_flow_vol"].get())
+    else:
+        vars["min_flow_vol"] = 0
+    if vars["min_#_paths/demand"].get():
+        vars["min_#_paths/demand"] = int(vars["min_#_paths/demand"].get())
+    else:
+        vars["min_#_paths/demand"] = 0
+    print("Min flow vol: ", vars["min_flow_vol"])
+    print("Max Paths/demand: ", vars["min_#_paths/demand"])
+    print("Max path length: ", vars["max_path_length"])
+    solve(vars)
 
     # win.destroy()
 

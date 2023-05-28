@@ -79,23 +79,23 @@ def get_lower_bound_flows(path_flow_vars, min_flow_vol):
             all_lower_bound_flows += "%dU%d%d<=X%d%d;\n" % (min_flow_vol,  i+1, j+1, i+1, j+1)
     return all_lower_bound_flows
 
-# def solve_gen_dimen_alloc_prob(path_flow_vars, path_flow_DV, link_capacities, obj_func):
+# def solve_gen_dimen_alloc_prob(vars):
 #     f = open("lp_solve.txt", "w+")
 #     ## OBJECTIVE FUNCTION
 #     f.write("// OBJECTIVE FUNCTION\n")
-#     f.write(obj_func)
+#     f.write(get_obj_function(vars))
 
 #     ## DEMAND CONSTRAINTS
 #     f.write("\n// DEMAND CONSTRAINTS\n")
-#     f.write(get_demand_constraints(path_flow_vars, path_flow_DV))
+#     f.write(get_demand_constraints(vars["path_flow_vars"], vars["path_flow_DV"]))
 
 #     ## CAPACITY CONSTRAINTS
 #     f.write("\n// CAPACITY CONSTRAINTS\n")
-#     f.write(get_capacity_constraints(path_flow_vars, link_capacities))
+#     f.write(get_capacity_constraints(vars["path_flow_vars"], vars["capacity_entries"]))
 
 #     f.close()
 #     os.system("lp_solve "+os.getcwd()+"/lp_solve.txt")
-def solve_gen_dimen_alloc_prob(vars):
+def solve(vars):
     f = open("lp_solve.txt", "w+")
     ## OBJECTIVE FUNCTION
     f.write("// OBJECTIVE FUNCTION\n")
@@ -109,54 +109,70 @@ def solve_gen_dimen_alloc_prob(vars):
     f.write("\n// CAPACITY CONSTRAINTS\n")
     f.write(get_capacity_constraints(vars["path_flow_vars"], vars["capacity_entries"]))
 
+    if vars["min_#_paths/demand"] > 1:
+        f.write("\n// ENFORCE PATH DIVERSITY\n")
+        f.write(get_enforced_path_constraints(vars["path_flow_vars"],
+                                              vars["path_flow_DV"],
+                                              vars["min_#_paths/demand"]))
+    if vars["min_flow_vol"] > 0:
+        f.write("\n// FLOWS IN USER\n")
+        f.write(get_flows_in_use(vars["path_flow_vars"], vars["path_flow_DV"]))
+        f.write("\n// LOWER BOUND ON FLOWS\n")
+        f.write(get_lower_bound_flows(vars["path_flow_vars"], vars["min_flow_vol"]))
+        f.write("\n//VARIABLES\n")
+        bin = "bin "
+        for i, demand in enumerate(vars["path_flow_vars"]):
+            for j, flow in enumerate(demand):
+                bin += "U%d%d," % (i+1, j+1)
+        f.write(bin[:-1]+";\n")
     f.close()
     os.system("lp_solve "+os.getcwd()+"/lp_solve.txt")
 
-def solve_enforced_path_diversity(vars):
-    f = open("lp_solve.txt", "w+")
-    ## OBJECTIVE FUNCTION
-    f.write("// OBJECTIVE FUNCTION\n")
-    f.write(get_obj_function(vars))
+# def solve_enforced_path_diversity(vars):
+#     f = open("lp_solve.txt", "w+")
+#     ## OBJECTIVE FUNCTION
+#     f.write("// OBJECTIVE FUNCTION\n")
+#     f.write(get_obj_function(vars))
 
-    ## DEMAND CONSTRAINTS
-    f.write("\n// DEMAND CONSTRAINTS\n")
-    f.write(get_demand_constraints(path_flow_vars, path_flow_DV))
+#     ## DEMAND CONSTRAINTS
+#     f.write("\n// DEMAND CONSTRAINTS\n")
+#     f.write(get_demand_constraints(path_flow_vars, path_flow_DV))
 
-    ## CAPACITY CONSTRAINTS
-    f.write("\n// CAPACITY CONSTRAINTS\n")
-    f.write(get_capacity_constraints(path_flow_vars, link_capacities))
+#     ## CAPACITY CONSTRAINTS
+#     f.write("\n// CAPACITY CONSTRAINTS\n")
+#     f.write(get_capacity_constraints(path_flow_vars, link_capacities))
 
-    ## ENFORCED PATH DIVERSITY
-    f.write("\n// ENFORCED PATH DIVERSITY\n")
-    f.write(get_enforced_path_constraints(path_flow_vars, path_flow_DV, min_paths))
+#     ## ENFORCED PATH DIVERSITY
+#     f.write("\n// ENFORCED PATH DIVERSITY\n")
+#     f.write(get_enforced_path_constraints(path_flow_vars, path_flow_DV, min_paths))
 
-    f.close()
-    os.system("lp_solve "+os.getcwd()+"/lp_solve.txt")
+#     f.close()
+#     os.system("lp_solve "+os.getcwd()+"/lp_solve.txt")
 
-def solve_min_flow_vol(path_flow_vars, path_flow_DV, link_capacities, min_flow_vol, obj_func):
-    f = open("lp_solve.txt", "w+")
-    ## OBJECTIVE FUNCTION
-    f.write("// OBJECTIVE FUNCTION\n")
-    f.write(obj_func)
+# def solve_min_flow_vol(path_flow_vars, path_flow_DV, link_capacities, min_flow_vol, obj_func):
+#     f = open("lp_solve.txt", "w+")
+#     ## OBJECTIVE FUNCTION
+#     f.write("// OBJECTIVE FUNCTION\n")
+#     f.write(obj_func)
     
-    ## DEMAND CONSTRAINTS
-    f.write("\n// DEMAND CONSTRAINTS\n")
-    f.write(get_demand_constraints(path_flow_vars, path_flow_DV))
+#     ## DEMAND CONSTRAINTS
+#     f.write("\n// DEMAND CONSTRAINTS\n")
+#     f.write(get_demand_constraints(path_flow_vars, path_flow_DV))
 
-    ## CAPACITY CONSTRAINTS
-    f.write("\n// CAPACITY CONSTRAINTS\n")
-    f.write(get_capacity_constraints(path_flow_vars, link_capacities))
+#     ## CAPACITY CONSTRAINTS
+#     f.write("\n// CAPACITY CONSTRAINTS\n")
+#     f.write(get_capacity_constraints(path_flow_vars, link_capacities))
 
-    ## FLOWS IN USE
-    f.write("\n// FLOWS IN USE\n")
-    f.write(get_flows_in_use(path_flow_vars, path_flow_DV))
+#     ## FLOWS IN USE
+#     f.write("\n// FLOWS IN USE\n")
+#     f.write(get_flows_in_use(path_flow_vars, path_flow_DV))
 
-    ## MIN FLOW VOLUME
-    f.write("\n// MIN FLOW VOLUME\n")
-    f.write(get_lower_bound_flows(path_flow_vars, min_flow_vol))
+#     ## MIN FLOW VOLUME
+#     f.write("\n// MIN FLOW VOLUME\n")
+#     f.write(get_lower_bound_flows(path_flow_vars, min_flow_vol))
 
 
-    f.close()
-    os.system("lp_solve "+os.getcwd()+"/lp_solve.txt")
+#     f.close()
+#     os.system("lp_solve "+os.getcwd()+"/lp_solve.txt")
 
 ## commit test
