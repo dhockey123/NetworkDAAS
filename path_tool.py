@@ -16,8 +16,19 @@ def path_finder(links, a, b, path=None, result=None):
             if next_node not in path:
                 new_path = list(path)
                 path_finder(links, next_node, b, new_path, result)
-    
+
     return result
+
+## After calling path_finder() remove paths passing via source/sink node
+def remove_source_sink(paths, a, b, node_types):
+    idx = []
+    for i, demand in enumerate(paths):
+        for link in demand:
+            if node_types[link-1] == "sourcesink" and link != a and link != b:
+                idx.append(i)
+    for i in sorted(idx, reverse=True):
+        del paths[i]
+    return paths
 
 def node_paths_to_demand_paths(links, paths):
     demand_paths = []

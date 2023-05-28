@@ -13,7 +13,7 @@ screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption("Network design - Press 'space' key - R.Click between nodes")
 pygame.init()
 
-circles, lines, links, nodes, node_types, lines_idx, paths = [],[],[],[],[],[],[]
+circles, lines, links, nodes, node_colours, lines_idx, paths = [],[],[],[],[],[],[]
 node, link = 0,0
 drag_idx, drag_offset = None, None
 delete_mode, drawing_line = False, False
@@ -22,9 +22,9 @@ blocksize = 20
 # Initialize Pygame
 
 def reset():
-    global nodes, node_types, links, lines, circles
+    global nodes, node_colours, links, lines, circles
     nodes = []
-    node_types = []
+    node_colours = []
     links = []
     lines = []
     circles = []
@@ -59,10 +59,10 @@ while True:
                 # Create new circle at L.mouse click location
                 else:
                     if is_mouse_in_fullnode(event.pos):
-                        node_types.append(RED)
+                        node_colours.append(RED)
                         create_drag_node()
                     elif is_mouse_in_transitnode(event.pos):
-                        node_types.append(GREEN)
+                        node_colours.append(GREEN)
                         create_drag_node()
                     elif is_mouse_in_deletemode(event.pos):
                         delete_mode = True
@@ -89,7 +89,7 @@ while True:
                 for i, circle in enumerate(circles):
                     if is_mouse_in_circle(circle):
                         circles.pop(i)
-                        node_types.pop(i)
+                        node_colours.pop(i)
                         nodes.pop(i)
                         lines_pop_idx = []
                         
@@ -102,8 +102,13 @@ while True:
                         for idx in sorted(lines_pop_idx, reverse=True):
                             del links[idx]
                             del lines[idx]
+
+                        # Decremment node values > value of deleted node
+                        for j, node in enumerate(nodes):
+                            if node > i+1:
+                                nodes[i] -= 1
                  
-                        ## Decrement node values > value of deleted node
+                        ## Decrement link values > value of deleted node
                         for j, link in enumerate(links):
                             a,b = link
                             if a>i+1 and b>i+1:
@@ -161,7 +166,19 @@ while True:
             if event.key == pygame.K_SPACE:
                 print("\nNodes: ", nodes)
                 print("Links: ", links)
-                assign_params(links)
+                print("node_colours:", node_colours)
+                node_types = []
+                for i, type in enumerate(node_colours):
+                    if type == GREEN:
+                        node_types.append("full")
+                    elif type == RED:
+                        node_types.append("sourcesink")
+                    else:
+                        print("THIS SHOULD NOT HAPPEN")
+                        exit()
+
+                assign_params(links, node_types)
+                # print(node_types)
                 
       
                 
@@ -170,7 +187,7 @@ while True:
 
     draw_grid(SCREEN_WIDTH, SCREEN_HEIGHT, blocksize)
     draw_dash(DASH_WIDTH, DASH_HEIGHT)
-    draw_circle(circles, node_types)
+    draw_circle(circles, node_colours)
     draw_line(lines)
     
     if(delete_mode == True):

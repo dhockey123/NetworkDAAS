@@ -1,21 +1,23 @@
+
 from tkinter import *
 from path_tool import *
 from generate_lpsolve import solve_gen_dimen_alloc_prob
 demand_rows = 4
-# links = [(1,2),(2,3),(1,3)]
+# # links = [(1,2),(2,3),(1,3)]
+# nodes =  [1, 2, 3, 4]
+# links =   [(1, 2), (2, 3), (1, 4), (3, 4), (1, 3)]
+# node_types = ["full", "full", "sourcesink", "full"]
 
 def print_demand(links):
-
     demand_entries = vars["demand_entries"]
     for i in range(0, len(demand_entries), 3):
         node_a = int(demand_entries[i].get())
         node_b = int(demand_entries[i+1].get())
         node_paths = path_finder(links, node_a, node_b)
+        node_paths = remove_source_sink(node_paths, node_a, node_b, vars["node_types"])
         demand_paths = node_paths_to_demand_paths(links, node_paths)
         vars["path_flow_vars"].append(demand_paths)
         vars["path_flow_DV"].append(float(demand_entries[i+2].get()))
-    print(vars["path_flow_vars"])
-    print(vars["path_flow_DV"])
     for i in range(len(vars["capacity_entries"])):
         try:
             vars["capacity_entries"][i] = float(vars["capacity_entries"][i].get())
@@ -25,12 +27,10 @@ def print_demand(links):
             vars["cost_entries"][i] = float(vars["cost_entries"][i].get())
         except:
             vars["cost_entries"][i] = 0
-    print("B:", vars["path_flow_vars"])
     
     if vars["max_path_length"].get():
         vars["max_path_length"] = float(vars["max_path_length"].get())
         vars["path_flow_vars"] = limit_path_hops(vars["max_path_length"],vars["path_flow_vars"])
-    print("A:", vars["path_flow_vars"])
     solve_gen_dimen_alloc_prob(vars)
 
     # win.destroy()
@@ -85,10 +85,12 @@ vars["path_flow_DV"] = []
 
 
 
-def assign_params(links):
+def assign_params(links, node_types):
     win = Tk()
     rb_var = IntVar()
-    # win.maxsize(300, 900)
+    
+    vars["node_types"] = node_types
+
     win.resizable(False,False)
     l_frame = Frame(win, width=150)
     l_frame.grid(row=0, column=0, sticky="nsew")
@@ -157,4 +159,4 @@ def assign_params(links):
     win.mainloop()
 
 
-# assign_params(links)
+# assign_params(links, node_types)
