@@ -3,15 +3,15 @@ from tkinter import *
 class SideDashBoard(Frame):
     def __init__(self, parent):
         super().__init__(parent)
-        # self.parent = parent
+  
         self.WIDTH = 200
         self.HEIGHT = 900
         self.LINK_ROW = 0
         self.DEMAND_ROW = 1
-        # self.cost_entries = []
+        rb_var = IntVar()
         self.config(width=self.WIDTH, height=self.HEIGHT)
-        # self.grid_propagate(0)
         self.pack(side="left", anchor="n")
+        self.pack_propagate(0)
         self.ProblemFormulation = {
             "LinkCosts":[],
             "LinkCapacities":[],
@@ -19,53 +19,99 @@ class SideDashBoard(Frame):
             "NetworkDemands":[],
             "Min_Flow_Vol":0,
             "Min_#_Paths/Demand":0, 
-            "Obj_Func":"min: ;"
+            "Obj_Func":"min: ;",
         }
+        
+        self.demand_entries = []
+        self.cost_entries = []
+        self.capacity_entries = []
 
-        ## Link costs
         self.grid_rowconfigure(0, weight=1)
         self.grid_rowconfigure(1, weight=1)
         self.grid_columnconfigure(0, weight=1)
         self.grid_columnconfigure(1, weight=1)
         
-        self.l_frame = Frame(self, width=100)
+        
+        ## Link costs
+        self.l_frame = Frame(self)
         self.l_frame.grid(row=0, column=0)
-        Label(self.l_frame, text="Link costs").grid(row=self.LINK_ROW, column=0, columnspan=2)
+        Label(self.l_frame, text="Link Costs",font=('Helvetica','12','bold')).grid(row=self.LINK_ROW, column=0, columnspan=2)
         ## Link capacities
-        self.r_frame = Frame(self, width=100)
-        self.r_frame.grid(row=0, column=1, sticky="nsew")
-        Label(self.r_frame, text="Link Capacities").grid(row=self.LINK_ROW, column=0, columnspan=2)
+        self.r_frame = Frame(self)
+        self.r_frame.grid(row=0, column=1)
+        Label(self.r_frame, text="Link Capacities",font=('Helvetica','12','bold')).grid(row=self.LINK_ROW, column=0, columnspan=2)
+        ## Objective Function
+        self.obj_frame = Frame(self)
+        self.obj_frame.grid(row=1, column=0, columnspan=2)
+        Label(self.obj_frame, text="Objective function", font=('Helvetica', 12, 'bold')).grid(row=0, column=0, columnspan=3)
+        Radiobutton(self.obj_frame, text="Min hops", variable=rb_var, command=lambda:print(""), value=1).grid(row=1, column=0)
+        Radiobutton(self.obj_frame, text="Min routing cost", variable=rb_var, command=lambda:print(""), value=2).grid(row=1, column=1)
+        Radiobutton(self.obj_frame, text="None", variable=rb_var, command=lambda:print(""), value=3).grid(row=1, column=2)
+        ## Path/Flow Constraints
+        self.rules_frame = Frame(self)
+        self.rules_frame.grid(row=2, column=0, columnspan=2)
+        Label(self.rules_frame, text="Path/Flow constraints", font=('Helvetica', 12, 'bold')).grid(row=0, column=0, columnspan=3)
+        Label(self.rules_frame, text="Max. Path length =").grid(row=1, column=0)
+        self.ProblemFormulation["Max_Path_Length"] = Entry(self.rules_frame)
+        self.ProblemFormulation["Max_Path_Length"].grid(row=1, column=1)
+        Label(self.rules_frame, text="Min. Flow volume =").grid(row=2, column=0)
+        self.ProblemFormulation["Min_Flow_vol"] = Entry(self.rules_frame)
+        self.ProblemFormulation["Min_Flow_vol"].grid(row=2, column=1)
+        Label(self.rules_frame, text="Min. # Paths/Demand =").grid(row=3, column=0)
+        self.ProblemFormulation["Min_#_Paths/Demand"] = Entry(self.rules_frame)
+        self.ProblemFormulation["Min_#_Paths/Demand"].grid(row=3, column=1)
         ## Demands
-        self.demand_frame = Frame(self, width=200)
-        self.demand_frame.grid(row=1, column=0, columnspan=2)
-        Label(self.demand_frame, text="Demands").grid(row=self.DEMAND_ROW, column=0, columnspan=3)
+        self.demand_frame = Frame(self)
+        self.demand_frame.grid(row=3, column=0, columnspan=2)
+        Label(self.demand_frame, text="Demands",font=('Helvetica','12','bold')).grid(row=self.DEMAND_ROW, column=0, columnspan=3)
         self.DEMAND_ROW += 1
         Label(self.demand_frame, text="Node A").grid(row=self.DEMAND_ROW, column=0)
         Label(self.demand_frame, text="Node B").grid(row=self.DEMAND_ROW, column=1)
         Label(self.demand_frame, text="DVUs").grid(row=self.DEMAND_ROW, column=2)
         self.create_demand_entry()
+        ## Buttons
+        self.button_frame = Frame(self, pady=10)
+        self.button_frame.grid(row=4, column=0, columnspan=2)
+        b1 = Button(self.button_frame, text="Create demand", command=lambda:self.create_demand_entry())
+        b1.grid(row=0, column=0,  sticky="nsew")
+        b2 = Button(self.button_frame, text="Remove demand", command=lambda:self.remove_demand_entry())
+        b2.grid(row=0, column=1, sticky="nsew")
+        
         
 
     def update_link_entries(self):
         self.LINK_ROW += 1
-        Label(self.l_frame, text="e%d" % self.LINK_ROW, width=10).grid(row=self.LINK_ROW, column=0)
-        tmp = Entry(self.l_frame, width=10)
-        tmp.grid(row=self.LINK_ROW, column=1)
+        l1 = Label(self.l_frame, text="e%d" % self.LINK_ROW, width=4)
+        l1.grid(row=self.LINK_ROW, column=0)
+        self.cost_entries.append(Entry(self.l_frame, width=10))
+        self.cost_entries[-1].grid(row=self.LINK_ROW, column=1)
         
-        Label(self.r_frame, text="c%d" % self.LINK_ROW, width=10).grid(row=self.LINK_ROW, column=0)
-        tmp2 = Entry(self.r_frame, width=10)
-        tmp2.grid(row=self.LINK_ROW, column=1)
+        l2 = Label(self.r_frame, text="c%d" % self.LINK_ROW, width=4)
+        l2.grid(row=self.LINK_ROW, column=0)
+        self.capacity_entries.append(Entry(self.r_frame, width=10))
+        self.capacity_entries[-1].grid(row=self.LINK_ROW, column=1)
         
     def create_demand_entry(self):
         self.DEMAND_ROW += 1
         for i in range(3):
-            tmp = Entry(self.demand_frame, width=10)
-            tmp.grid(row=self.DEMAND_ROW, column=i)
+            self.demand_entries.append(Entry(self.demand_frame, width=10))
+            self.demand_entries[-1].grid(row=self.DEMAND_ROW, column=i)
+            
+    def remove_demand_entry(self):
+        print("REMOVED")
+        if self.DEMAND_ROW >= 3:
+            self.DEMAND_ROW -= 1
+        try:
+            for i in range(3):
+                self.demand_entries[-1].destroy()
+                self.demand_entries.pop()
+        except:
+            Exception    
+            
 
 class NetworkDesignTool(Frame):
     def __init__(self, parent, config):
         super().__init__(parent)
-        # self.parent = parent
         self.BLOCKSIZE = config['BLOCKSIZE']
         self.HEIGHT = config['SCREEN_HEIGHT']
         self.WIDTH = config['SCREEN_WIDTH']
@@ -81,6 +127,7 @@ class NetworkDesignTool(Frame):
         self.network_design = {
             'circles':[],
             'lines':[],
+            'links':[],
             'draw_circles':[],
             'draw_lines':[],
             'node_labels':[],
@@ -88,12 +135,12 @@ class NetworkDesignTool(Frame):
         }
         
         self.node_count = 1
+        self.link_count = 1
         self.drag_line = False
         self.drag_node = False
         self.idx       = None
         self.drag_lines_idx = []
         self.enable_create = True
-        self.delete_mode = False
         
         self.draw_grid()
         self.nodebar = self.canvas.create_rectangle(0, 0, self.TOOLBAR_WIDTH, self.TOOLBAR_HEIGHT, fill="#edc277")
@@ -115,11 +162,6 @@ class NetworkDesignTool(Frame):
         for x in range(0, self.WIDTH, self.BLOCKSIZE):
             for y in range(0, self.HEIGHT, self.BLOCKSIZE):
                 self.canvas.create_rectangle(x, y, x + self.BLOCKSIZE, y + self.BLOCKSIZE, fill="white", outline="#f6f6f6")
-                
-    # def click(self, e):
-    #     bbox = self.canvas.bbox(self.thing)
-    #     if bbox[0] <= e.x <= bbox[2] and bbox[1] <= e.y <= bbox[3]:
-    #         self.master.sidedashboard.update_link_entries()
             
     def create_circle(self, x, y, c):
         r = self.RADIUS
@@ -134,10 +176,19 @@ class NetworkDesignTool(Frame):
         self.enable_create = False
         self.idx = len(self.network_design["circles"]) - 1
         self.drag_lines_idx = []
-        self.node_count += 1
+        self.node_count += 1  
     
     def create_node_label(self, e):
-        self.network_design["node_labels"].append(self.canvas.create_text((e.x, e.y), text=str(self.node_count), fill="black"))
+        self.network_design["node_labels"].append(self.canvas.create_text((e.x, e.y), 
+                                                                          text=str(self.node_count), 
+                                                                          font=('Helvetica','14','bold'), 
+                                                                          fill="black"))
+        
+    def create_link_label(self, x, y):
+        self.network_design["link_labels"].append(
+                    self.canvas.create_text((x+2, y+2), text="e=%d"%(self.link_count),
+                                            font=('Helvetica','12'), 
+                                            fill="black"))
     
     def is_mouse_in_circle_region(self, x, y, e):
         return (x-e.x)**2 + (y-e.y)**2 <= self.RADIUS**2
@@ -149,7 +200,6 @@ class NetworkDesignTool(Frame):
                 return i
     
     def drag(self, e):
-        # print(e.x, e.y)
         if self.is_mouse_in_circle_region(45, 50, e) and self.enable_create == True:
             self.set_new_node(e, "green")
         if self.is_mouse_in_circle_region(45, 120, e) and self.enable_create == True:
@@ -161,9 +211,10 @@ class NetworkDesignTool(Frame):
                 self.drag_node = True
                 if len(self.network_design["lines"]) > 0:
                     self.get_connected_lines(self.network_design["circles"][self.idx])
+                    
         if self.drag_node == True:
             self.canvas.moveto(self.network_design["draw_circles"][self.idx], e.x-self.RADIUS, e.y-self.RADIUS)
-            self.canvas.moveto(self.network_design["node_labels"][self.idx], e.x, e.y-9)
+            self.canvas.moveto(self.network_design["node_labels"][self.idx], e.x, e.y)
             self.network_design["circles"][self.idx] = e.x, e.y
             self.move_connected_lines(e.x, e.y)
             
@@ -172,7 +223,7 @@ class NetworkDesignTool(Frame):
             x, y = self.snap_grid(e)
             self.network_design["circles"][self.idx] = x+self.RADIUS, y+self.RADIUS
             self.canvas.moveto(self.network_design["draw_circles"][self.idx], x, y)
-            self.canvas.moveto(self.network_design["node_labels"][self.idx], x, y-9)
+            self.canvas.moveto(self.network_design["node_labels"][self.idx], x+self.RADIUS, y+self.RADIUS)
             self.move_connected_lines(x+self.RADIUS, y+self.RADIUS)
             
         self.drag_node = False
@@ -194,32 +245,46 @@ class NetworkDesignTool(Frame):
             x1, y1, x2, y2 = self.canvas.coords(self.network_design["lines"][i[0]])
             if i[1] == 0:
                 self.canvas.coords(self.network_design["lines"][i[0]], x, y, x2, y2)
+                self.canvas.moveto(self.network_design["link_labels"][i[0]], (x+x2)/2, (y+y2)/2)
             elif i[1] == 2:
                 self.canvas.coords(self.network_design["lines"][i[0]], x1, y1, x, y)
+                self.canvas.moveto(self.network_design["link_labels"][i[0]], (x+x1)/2, (y+y1)/2)
         
     def dragline(self, e):
         if self.drag_line == False:
             self.idx = self.circle_idx_at_mouse(e)
             if self.idx is not None:
                 x, y = self.network_design["circles"][self.idx]
-                self.network_design["lines"].append(self.canvas.create_line(x, y, x+4, x+y))
+                self.network_design["lines"].append(self.canvas.create_line(x, y, x+4, x+4))
+                # self.network_design["node_labels"].append(self.canvas.create_text((e.x, e.y), text=str(self.node_count), fill="black"))
+                self.network_design["link_labels"].append(
+                    self.canvas.create_text((x+2, y+2), text="e=%d"%(self.link_count),font=('Helvetica','14','bold'), fill="black"))
                 self.drag_line = True
         if self.drag_line == True:
             x, y = self.network_design["circles"][self.idx]
             self.canvas.coords(self.network_design["lines"][-1], x, y, e.x, e.y)
+            self.canvas.moveto(self.network_design["link_labels"][-1], (x+e.x)/2, (y+e.y)/2)
     
     def dropline(self, e):
         self.idx = self.circle_idx_at_mouse(e)
         if self.idx is not None and self.drag_line == True:
             x1, y1 = self.canvas.coords(self.network_design["lines"][-1])[0], self.canvas.coords(self.network_design["lines"][-1])[1]
             x2, y2 = self.network_design["circles"][self.idx]
-            self.canvas.coords(self.network_design["lines"][-1], x1, y1, x2, y2)
-            self.idx = None
-            # self.network_design[""]      
-            self.master.sidedashboard.update_link_entries()
+            self.idx = None  
+            if x1!=x2 and y1!=y2:
+                self.canvas.coords(self.network_design["lines"][-1], x1, y1, x2, y2)
+                self.master.sidedashboard.update_link_entries()
+                self.link_count += 1
+                self.network_design["links"].append(self.get_node_for_link(
+                    self.canvas.coords(self.network_design["lines"][-1])))
+                print(self.network_design["links"])
+            else:
+                self.reset_line()
+
         elif self.drag_line == True:
-            self.canvas.delete(self.network_design["lines"][-1])#
-            self.network_design["lines"].pop()
+            self.reset_line()
+
+        self.idx = None
         self.drag_line = False     
         
     def snap_grid(self, e):
@@ -235,6 +300,21 @@ class NetworkDesignTool(Frame):
         if y_off >= self.BLOCKSIZE/2:
             y += self.BLOCKSIZE - y_off
         return (x-self.RADIUS, y-self.RADIUS)
+    
+    def get_node_for_link(self, line):
+        for i,circle in enumerate(self.network_design["circles"]):
+            x, y = circle
+            if line[0] == x and line[1] == y:
+                node_1 = i+1
+            elif line[2] == x and line[3] == y:
+                node_2 = i+1
+        return node_1, node_2
+    
+    def reset_line(self):
+        self.canvas.delete(self.network_design["lines"][-1])#
+        self.canvas.delete(self.network_design["link_labels"][-1])
+        self.network_design["lines"].pop()
+        self.network_design["link_labels"].pop()
            
 
 class App(Tk):
@@ -243,12 +323,13 @@ class App(Tk):
         self.config = {
             'SCREEN_HEIGHT': 900,
             'SCREEN_WIDTH': 1200,
-            'BLOCKSIZE': 20
+            'BLOCKSIZE': 30
         }
-
+        self.title("Network Dimensioning and Allocation Solver")
         self.geometry("1200x900")
         self.sidedashboard = SideDashBoard(self)
         self.networkdesigntool = NetworkDesignTool(self, self.config)
+        self.pack_propagate(0)
 
 if __name__ == "__main__":
     app = App()

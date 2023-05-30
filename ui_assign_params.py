@@ -112,10 +112,10 @@ def assign_params(links, node_types):
     demand_frame = Frame(win, width=300)
     demand_frame.grid(row=1, column=0,  columnspan=2, sticky="nsew")
 
-    win.columnconfigure(0, weight=1) 
-    win.columnconfigure(1, weight=1) 
-    win.rowconfigure(0, weight=1) 
-    win.rowconfigure(1, weight=1) 
+    # win.columnconfigure(0, weight=1) 
+    # win.columnconfigure(1, weight=1) 
+    # win.rowconfigure(0, weight=1) 
+    # win.rowconfigure(1, weight=1) 
 
     ## LINK COSTS AND CAPACITIES
     Label(l_frame, text="Link Costs", font=('Helvetica', 12, 'bold')).grid(row=0, column=0, columnspan=2)
