@@ -15,13 +15,14 @@ class SideDashBoard(Frame):
         self.pack(side="left", anchor="n")
         self.pack_propagate(0)
         self.ProblemFormulation = {
+            "Nodes":[],
             "LinkCosts":[],
             "LinkCapacities":[],
             "NetworkPaths":[],
             "NetworkDemands":[],
             "Min_Flow_Vol":0,
             "Min_#_Paths/Demand":0, 
-            "Obj_Func":"none",
+            "Obj_Func":"none"
         }
         
         self.demand_entries = []
@@ -95,9 +96,18 @@ class SideDashBoard(Frame):
         # TMPLINKS = [(1, 2), (2, 3), (1, 3)]
         print("Node Types: ", self.ProblemFormulation["node_types"])
         try:
+            Nodes = self.ProblemFormulation["Nodes"]
             for i in range(0, len(self.demand_entries), 3):
                 node_a = int(self.demand_entries[i].get())
                 node_b = int(self.demand_entries[i+1].get())
+                print(node_a, node_b)
+                print(Nodes)
+                if node_a not in Nodes:
+                    print("Node %d does not exist." % (node_a))
+                    return None
+                elif node_b not in Nodes:
+                    print("Node %d does not exist." % (node_b))
+                    return None
                 demand_vol = float(self.demand_entries[i+2].get())
 
                 node_paths = path_finder(links, node_a, node_b)
@@ -268,17 +278,19 @@ class NetworkDesignTool(Frame):
         self.enable_create = False
         self.idx = len(self.network_design["circles"]) - 1
         self.drag_lines_idx = []
-        self.node_count += 1  
         if colour == "red":
             self.network_design["node_types"].append("sourcesink")
         elif colour == "green":
             self.network_design["node_types"].append("full")
+        self.master.sidedashboard.ProblemFormulation["Nodes"].append(self.node_count)
+        self.node_count += 1  
     
     def create_node_label(self, e):
         self.network_design["node_labels"].append(self.canvas.create_text((e.x, e.y), 
                                                                           text=str(self.node_count), 
                                                                           font=('Helvetica','14','bold'), 
                                                                           fill="black"))
+        
         
     def create_link_label(self, x, y):
         self.network_design["link_labels"].append(
