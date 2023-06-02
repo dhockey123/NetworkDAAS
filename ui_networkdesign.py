@@ -74,12 +74,13 @@ class SideDashBoard(Frame):
         ## Buttons
         self.button_frame = Frame(self, pady=10)
         self.button_frame.grid(row=4, column=0, columnspan=2)
-        b1 = Button(self.button_frame, text="Create demand", command=lambda:self.create_demand_entry())
-        b1.grid(row=0, column=0,  sticky="nsew")
-        b2 = Button(self.button_frame, text="Remove demand", command=lambda:self.remove_demand_entry())
-        b2.grid(row=0, column=1, sticky="nsew")
-        b3 = Button(self.button_frame, text="Solve", command=lambda:self.get_entries())
-        b3.grid(row=1, column=0, columnspan=2)
+        self.b1 = Button(self.button_frame, text="Create demand", command=lambda:self.create_demand_entry())
+        self.b1.grid(row=0, column=0,  sticky="nsew")
+        self.b2 = Button(self.button_frame, text="Remove demand", command=lambda:self.remove_demand_entry())
+        self.b2.grid(row=0, column=1, sticky="nsew")
+        self.b3 = Button(self.button_frame, text="Solve", command=lambda:self.get_entries())
+        self.b3.grid(row=1, column=0, columnspan=2)
+        self.b3["state"] = DISABLED
         
     def get_entries(self):
         ProblemFormulation = {}
@@ -87,26 +88,27 @@ class SideDashBoard(Frame):
         ProblemFormulation["NetworkPaths"]   = []
         ProblemFormulation["LinkCosts"] = []
         ProblemFormulation["LinkCapacities"] = []
-        # self.ProblemFormulation["Max_Path_Length"] = "empty"
-        # self.ProblemFormulation["Min_#_Paths/Demand"] = "empty"
-        # self.ProblemFormulation["Min_Flow_vol"] = "empty"
+        ProblemFormulation["Obj_Func"] = self.ProblemFormulation["Obj_Func"]
         
         print("\n")
         links = self.ProblemFormulation["Links"]
         # TMPLINKS = [(1, 2), (2, 3), (1, 3)]
         print("Node Types: ", self.ProblemFormulation["node_types"])
+        try:
+            for i in range(0, len(self.demand_entries), 3):
+                node_a = int(self.demand_entries[i].get())
+                node_b = int(self.demand_entries[i+1].get())
+                demand_vol = float(self.demand_entries[i+2].get())
 
-        for i in range(0, len(self.demand_entries), 3):
-            node_a = int(self.demand_entries[i].get())
-            node_b = int(self.demand_entries[i+1].get())
-            demand_vol = float(self.demand_entries[i+2].get())
-
-            node_paths = path_finder(links, node_a, node_b)
-            node_paths = remove_source_sink(node_paths, node_a, node_b, self.ProblemFormulation["node_types"])
-            print("node_paths: ",node_paths)
-            demand_paths = node_paths_to_demand_paths(links, node_paths)
-            ProblemFormulation["NetworkPaths"].append(demand_paths)
-            ProblemFormulation["NetworkDemands"].append(demand_vol)
+                node_paths = path_finder(links, node_a, node_b)
+                node_paths = remove_source_sink(node_paths, node_a, node_b, self.ProblemFormulation["node_types"])
+                print("node_paths: ",node_paths)
+                demand_paths = node_paths_to_demand_paths(links, node_paths)
+                ProblemFormulation["NetworkPaths"].append(demand_paths)
+                ProblemFormulation["NetworkDemands"].append(demand_vol)
+        except:
+            print("Missing demand")
+            return None
    
 
         try:
@@ -139,7 +141,24 @@ class SideDashBoard(Frame):
         print("MinFLowVol:", ProblemFormulation["Min_Flow_vol"])
         print("MaxPathLength:", ProblemFormulation["Max_Path_Length"])
         print("Min # Paths/Demand:", ProblemFormulation["Min_#_Paths/Demand"])
-        solve(ProblemFormulation)
+
+        viable = self.check_entries(ProblemFormulation)
+        if viable != None:
+            solve(ProblemFormulation)
+
+    def check_entries(self, ProblemFormulation):
+        ## Check if objective functions is viable
+        missing_costs = []
+        for i, cost in enumerate(ProblemFormulation["LinkCosts"]):
+            if cost == "empty" and ProblemFormulation["Obj_Func"] == "min_routing_cost":
+                missing_costs.append(i+1)
+        if len(missing_costs) > 0:
+            text = ""
+            for i in missing_costs:
+                text += "e%d, " % i
+            print("Cannot minimise routing cost. Missing: ", text[:-2])
+            return None
+        return 1
                     
 
     def update_link_entries(self):
@@ -395,5 +414,6 @@ class NetworkDesignTool(Frame):
     def create_link(self, line):
         self.network_design["links"].append(self.get_node_for_link(
                     self.canvas.coords(line)))
+        self.master.sidedashboard.b3["state"] = ACTIVE
                 
            
